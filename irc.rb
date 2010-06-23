@@ -3,13 +3,15 @@
 require 'socket'
 
 $SAFE = 1
-$DEBUG = false
+$DEBUG = true
 
 def debug_puts msg
 	puts msg if $DEBUG == true
 end
 
 class IRC
+	attr_accessor :channel
+
 	def initialize server, port, nick, channel, bot
 		@server		= server
 		@port		= port
@@ -18,28 +20,41 @@ class IRC
 		@bot		= bot
 	end
 	
-	def send msg
+	def send str
 		# Sends a message to the server
-		debug_puts "--> #{msg}"
-		@irc.send "#{msg}\n", 0
+		debug_puts "--> #{str}"
+		@irc.send "#{str}\n", 0
+	end
+	
+	def send_msg msg
+		@irc.send( "PRIVMSG #{@channel} :#{msg}\n", 0 )
+	end
+	
+	def send_msg_delay msg
+		t = Thread.new do
+			sleep 0.1 + rand(40) * 0.01
+			self.send_msg msg
+		end
+		t.join
 	end
 	
 	def connect
 		# Connects to the IRC server
 		@irc = TCPSocket.open @server, @port
-		send "USER null null null :A Bot"
+		send "USER #{@bot.name} null null :#{@bot.fullname}"
 		send "NICK #{@nick}"
 		send "JOIN #{@channel}"
 	end
 	
 	def main_loop
 		while true
-			ready = select @irc, nil, nil, nil
+			ready = select [@irc], nil, nil, nil
 			next unless ready
 			for s in ready[0]
 				if s == @irc
 					return if @irc.eof
 					s = @irc.gets
+					debug_puts s
 					handle_server_msg s
 				end
 			end
@@ -77,3 +92,16 @@ class IRC
 	end
 end
 
+class IRCBot
+	def handle_server_msg irc, msg
+		raise
+	end
+	
+	def name
+		"ircbot"
+	end
+	
+	def fullname
+		"IRC Bot"
+	end
+end
