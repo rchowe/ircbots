@@ -15,6 +15,14 @@ class CarbonDB
 				db.execute("SELECT COUNT(*) FROM Carbon")
 			rescue SQLite3::SQLException
 				db.execute "CREATE TABLE Carbon (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, key TEXT NOT NULL, response TEXT NOT NULL)"
+				retry
+			end
+			
+			begin
+				db.execute("SELECT COUNT(*) FROM Inventory")
+			rescue SQLite3::SQLException
+				db.execute "CREATE TABLE Inventory (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, item TEXT NOT NULL)"
+				retry
 			end
 		end
 	end
@@ -29,11 +37,29 @@ class CarbonDB
 		@db.get_first_value "SELECT response FROM Carbon WHERE key = ? ORDER BY RANDOM()", key
 	end
 	
+	def store_item item
+		@db.transaction do |db|
+			db.execute "INSERT INTO Inventory VALUES (null, ?)", item
+		end
+	end
+	
+	def pop_random_item
+		row = @db.get_first_row "SELECT id, item FROM Inventory ORDER BY RANDOM() LIMIT 0, 1"
+		puts row
+		return nil if row.nil?
+		@db.execute "DELETE FROM Inventory WHERE id = ?", row[0]
+		return row[1]
+	end
+	
 	def size
 		begin
-			return @db.execute "SELECT COUNT(*) FROM Carbon"
+			return @db.get_first_value "SELECT COUNT(*) FROM Carbon"
 		rescue SQLite3::SQLException
 		end
+	end
+	
+	def inventory_size
+		return @db.get_first_value "SELECT COUNT(*) FROM Inventory"
 	end
 end
 
@@ -41,6 +67,7 @@ class Carbon < IRCBot
 	def initialize
 		@db = CarbonDB.new "carbon.db"
 		@away = false
+		@max_inventory_size = 2
 		
 		@variables = { "$user" => Proc.new { @last_user }, "$time" => Proc.new { Time.now.hour.to_s + ":" + Time.now.min.to_s }}
 	end
@@ -64,21 +91,30 @@ class Carbon < IRCBot
 							# Replies
 							when /^(.+?)<reply>(.+)$/
 								debug_puts "Storing #{$1} as #{$3}"
-								irc.send_msg_delay "OK, #{@last_user}. I will reply to #{$1.strip} with #{$2.strip}."
+								irc.send_msg_delay "OK, #{@last_user}."
 								@db.store $1.strip.downcase, $2.strip
 							
 							when /^(.+?)<action>(.+)$/
 								debug_puts "Storing #{$1} as #{$3}"
-								irc.send_msg_delay "OK, #{@last_user}. I will reply to #{$1.strip} with the action #{$2.strip}."
+								irc.send_msg_delay "OK, #{@last_user}."
 								@db.store $1.strip.downcase, "\1ACTION #{$2.strip}\1"
 
 							# Possesssives
 							when /^(.+?)<'s> (.+)$/
-								irc.send_msg_delay "OK, #{@last_user}. I will remember #{$1} as #{$1}'s #{$2}."
+								irc.send_msg_delay "OK, #{@last_user}."
 								@db.store $1.strip.downcase, "#{$1.strip}'s #{$2.strip}"
 							
+							# Item Requests
+							when /^give me (something|an item)([,]? please[\.?]?)?$/
+								item = @db.pop_random_item
+								if item.nil?
+									irc.send_msg_delay "I have nothing to give you!"
+									return
+								end
+								irc.send_msg_delay "\1ACTION gives #{@last_user} #{item}.\1"
+							
 							# Random
-							when /^(something random|random)$/
+							when /^(something random|random)[\.?]?$/
 								if @db.size == 0
 									irc.send_msg_delay "I have nothing random to say"
 								else
@@ -86,9 +122,20 @@ class Carbon < IRCBot
 #									puts a
 									irc.send_msg_delay "No."
 								end
-							when /^hello$/
+							when /^hello[\.]?$/
 								irc.send_msg_delay "Hello, #{@last_user}!"
 						end
+					
+					when /^[\1]ACTION gives carbon (.+?)[\.]?[\1]$/
+						if @db.inventory_size.to_i < @max_inventory_size
+							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{$1.strip}.\1"
+						else
+							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{$1.strip} and gives #{@last_user} #{@db.pop_random_item}.\1"
+						end
+						@db.store_item $1.strip
+					
+					when /^[\1]ACTION (.+?) carbon[\.]?[\1]$/
+						irc.send_msg_delay "\1ACTION #{$1} #{@last_user}\1"
 					
 					# That might be in carbon's memory
 					else
