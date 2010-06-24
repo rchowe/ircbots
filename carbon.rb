@@ -1,10 +1,34 @@
 #!/usr/bin/env ruby
 
 require 'irc.rb'
+require 'sqlite3'
+
+class CarbonDB
+	def initialize filename
+		@db = SQLite3::Database.new filename
+		create_table
+	end
+	
+	def create_table
+		@db.transaction do |db|
+			db.execute "CREATE TABLE Carbon (id REAL NOT NULL AUTOINCREMENT, key TEXT NOT NULL, response TEXT NOT NULL)"
+		end
+	end
+	
+	def store key, value
+		@db.transaction do |db|
+			db.execute "INSERT INTO Carbon VALUES (null, ?, ?)", key, value
+		end
+	end
+	
+	def retrieve key
+		@db.get_first_value "SELECT response FROM Carbon WHERE key = ?", key
+	end
+end
 
 class Carbon < IRCBot
 	def initialize
-		@memory = {}
+		@db = CarbonDB.new "carbon.db"
 		@away = false
 	end
 	
@@ -22,18 +46,18 @@ class Carbon < IRCBot
 							when /^(.+?) (is|are) (.+)/
 								debug_puts "Storing #{$1} as #{expr}"
 								irc.send_msg_delay "OK, #{username}. #{$1} #{$2} #{$3}."
-								@memory[$1.downcase] = expr
+								@db.store $1.downcase, expr
 							when /^(.+?)<reply>(.+)$/
 								debug_puts "Storing #{$1} as #{$3}"
 								irc.send_msg_delay "OK, #{username}. I will reply to #{$1} with #{$2}."
-								@memory[$1.downcase] = $2
+								@db.store $1.downcase, $2
 							when /^(say something random|random)$/
-								if @memory.size == 0
+								if @memory.items == 0
 									irc.send_msg_delay "I have nothing random to say"
 								else
-									a = @memory.to_a.sort_by{rand}.slice(0...1)[0][1].to_s
-									puts a
-									irc.send_msg_delay a
+#									a = @memory.to_a.sort_by{rand}.slice(0...1)[0][1].to_s
+#									puts a
+									irc.send_msg_delay "No."
 								end
 							when /^hello$/
 								irc.send_msg_delay "Hello, #{username}!"
@@ -41,8 +65,8 @@ class Carbon < IRCBot
 					
 					# That might be in carbon's memory
 					else
-						return unless @memory.has_key? m.downcase
-						irc.send_msg_delay @memory[m.downcase]
+						response = @db.retrieve m.downcase
+						irc.send_msg_delay response unless response.nil?
 				end
 		end
 	end
