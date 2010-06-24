@@ -84,6 +84,7 @@ class IRC
 		begin
 			irc.main_loop
 		rescue Interrupt
+			irc.send "QUIT :Server Killed"
 		rescue Exception => detail
 			puts detail.message
 			print detail.backtrace.join '\n'
