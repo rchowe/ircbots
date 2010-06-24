@@ -34,13 +34,15 @@ class Carbon < IRCBot
 	def initialize
 		@db = CarbonDB.new "carbon.db"
 		@away = false
+		
+		@variables = { "$user" => Proc.new { @last_user }, "$time" => Proc.new { Time.now.hour.to_s + ":" + Time.now.min.to_s }}
 	end
 	
 	def handle_server_msg irc, msg
 		case msg
 			when /^:(.+?)!(.+?)@(.+?)\sPRIVMSG\s(.+)\s:(.+)$/
 			# Someone says something
-				username = $1
+				@last_user = $1
 				m = $5.strip
 				case m
 					when /^carbon[:,] (.+)/
@@ -49,18 +51,18 @@ class Carbon < IRCBot
 						case expr
 							when /^(.+?) (is|are) (.+)/
 								debug_puts "Storing #{$1} as #{expr}"
-								irc.send_msg_delay "OK, #{username}. #{$1} #{$2} #{$3}."
+								irc.send_msg_delay "OK, #{@last_user}. #{$1} #{$2} #{$3}."
 								@db.store $1.downcase, expr
 							
 							# Replies
 							when /^(.+?)<reply>(.+)$/
 								debug_puts "Storing #{$1} as #{$3}"
-								irc.send_msg_delay "OK, #{username}. I will reply to #{$1.strip} with #{$2.strip}."
+								irc.send_msg_delay "OK, #{@last_user}. I will reply to #{$1.strip} with #{$2.strip}."
 								@db.store $1.strip.downcase, $2.strip
 
 							# Possesssives
 							when /^(.+?)<'s> (.+)$/
-								irc.send_msg_delay "OK, #{username}. I will remember #{$1} as #{$1}'s #{$2}."
+								irc.send_msg_delay "OK, #{@last_user}. I will remember #{$1} as #{$1}'s #{$2}."
 								@db.store $1.strip.downcase, "#{$1.strip}'s #{$2.strip}"
 							
 							# Random
@@ -73,21 +75,23 @@ class Carbon < IRCBot
 									irc.send_msg_delay "No."
 								end
 							when /^hello$/
-								irc.send_msg_delay "Hello, #{username}!"
+								irc.send_msg_delay "Hello, #{@last_user}!"
 						end
 					
 					# That might be in carbon's memory
 					else
 						response = @db.retrieve m.downcase
-						irc.send_msg_delay replace_vars( response, username ) unless response.nil?
+						irc.send_msg_delay replace_vars( response ) unless response.nil?
 				end
 		end
 	end
 	
-	def replace_vars str, username
-		begin
-			str["$user"] = username
-		rescue IndexError
+	def replace_vars str
+		@variables.each do |key, value|
+			begin
+				str[key] = value.call
+			rescue IndexError
+			end
 		end
 		str
 	end
