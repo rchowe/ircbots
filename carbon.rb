@@ -11,7 +11,7 @@ class CarbonDB
 	
 	def create_table
 		@db.transaction do |db|
-			db.execute "CREATE TABLE Carbon (id REAL NOT NULL AUTOINCREMENT, key TEXT NOT NULL, response TEXT NOT NULL)"
+			db.execute "CREATE TABLE Carbon (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, key TEXT NOT NULL, response TEXT NOT NULL)"
 		end
 	end
 	
