@@ -37,6 +37,10 @@ class CarbonDB
 		@db.get_first_value "SELECT response FROM Carbon WHERE key = ? ORDER BY RANDOM()", key
 	end
 	
+	def random_factoid
+		@db.get_first_value "SELECT response FROM Carbon ORDER BY RANDOM()"
+	end
+	
 	def store_item item
 		@db.transaction do |db|
 			db.execute "INSERT INTO Inventory VALUES (null, ?)", item
@@ -124,6 +128,8 @@ class Carbon < IRCBot
 								end
 							when /^hello[\.]?$/
 								irc.send_msg_delay "Hello, #{@last_user}!"
+							else
+								irc.send_msg_delay @db.random_factoid
 						end
 					
 					when /^[\1]ACTION gives carbon (.+?)[\.]?[\1]$/
