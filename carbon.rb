@@ -60,7 +60,7 @@ class Carbon < IRCBot
 
 							# Possesssives
 							when /^(.+?)<'s> (.+)$/
-								irc.send_msg_delay "OK, #{username}. I will remember #{$1} as #{$1}'s #{$2}'."
+								irc.send_msg_delay "OK, #{username}. I will remember #{$1} as #{$1}'s #{$2}."
 								@db.store $1.strip.downcase, "#{$1.strip}'s #{$2.strip}"
 							
 							# Random
@@ -79,9 +79,17 @@ class Carbon < IRCBot
 					# That might be in carbon's memory
 					else
 						response = @db.retrieve m.downcase
-						irc.send_msg_delay response unless response.nil?
+						irc.send_msg_delay replace_vars( response, username ) unless response.nil?
 				end
 		end
+	end
+	
+	def replace_vars str, username
+		begin
+			str["$user"] = username
+		rescue IndexError
+		end
+		str
 	end
 	
 	def name
