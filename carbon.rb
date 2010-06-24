@@ -66,6 +66,11 @@ class Carbon < IRCBot
 								debug_puts "Storing #{$1} as #{$3}"
 								irc.send_msg_delay "OK, #{@last_user}. I will reply to #{$1.strip} with #{$2.strip}."
 								@db.store $1.strip.downcase, $2.strip
+							
+							when /^(.+?)<action>(.+)$/
+								debug_puts "Storing #{$1} as #{$3}"
+								irc.send_msg_delay "OK, #{@last_user}. I will reply to #{$1.strip} with the action #{$2.strip}."
+								@db.store $1.strip.downcase, "\1ACTION #{$2.strip}\1"
 
 							# Possesssives
 							when /^(.+?)<'s> (.+)$/
