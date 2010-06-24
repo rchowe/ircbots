@@ -23,10 +23,10 @@ class Carbon < IRCBot
 								debug_puts "Storing #{$1} as #{expr}"
 								irc.send_msg_delay "OK, #{username}. #{$1} #{$2} #{$3}."
 								@memory[$1.downcase] = expr
-							when /^(.+?)<reply>(.+)$/
-								debug_puts "Storing #{$1} as #{$3}"
-								irc.send_msg_delay "OK, #{username}. I will reply to #{$1} with #{$2}."
-								@memory[$1.downcase] = $2
+							when /^(.+)<reply>(.+)$/
+								debug_puts "Storing #{$1.strip} as #{$3.strip}"
+								irc.send_msg_delay "OK, #{username}. I will reply to #{$1.strip} with #{$2.strip}."
+								@memory[$1.strip.downcase] = $2.strip
 							when /^(say something random|random)$/
 								if @memory.size == 0
 									irc.send_msg_delay "I have nothing random to say"
