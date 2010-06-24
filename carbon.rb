@@ -11,7 +11,11 @@ class CarbonDB
 	
 	def create_table
 		@db.transaction do |db|
-			db.execute "CREATE TABLE Carbon (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, key TEXT NOT NULL, response TEXT NOT NULL)"
+			begin
+				db.execute("SELECT COUNT(*) FROM Carbon")
+			rescue SQLite3::SQLException
+				db.execute "CREATE TABLE Carbon (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, key TEXT NOT NULL, response TEXT NOT NULL)"
+			end
 		end
 	end
 	
@@ -22,7 +26,7 @@ class CarbonDB
 	end
 	
 	def retrieve key
-		@db.get_first_value "SELECT response FROM Carbon WHERE key = ?", key
+		@db.get_first_value "SELECT response FROM Carbon WHERE key = ? ORDER BY RANDOM()", key
 	end
 end
 
