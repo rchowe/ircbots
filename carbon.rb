@@ -18,7 +18,7 @@ class Carbon < IRCBot
 					when /^carbon[:,] (.+)/
 					# To carbon...
 						case $1.strip.downcase
-							when /^(.+?) (is|are) (.+)/
+							when /^(.+?) [^\\](is|are) (.+)/
 								debug_puts "Storing #{$1} as #{$3}"
 								irc.send_msg_delay "OK, #{username}. #{$1} is #{$3}."
 								@memory[$1.downcase] = $3
