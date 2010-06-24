@@ -28,6 +28,13 @@ class CarbonDB
 	def retrieve key
 		@db.get_first_value "SELECT response FROM Carbon WHERE key = ? ORDER BY RANDOM()", key
 	end
+	
+	def size
+		begin
+			return @db.execute "SELECT COUNT(*) FROM Carbon"
+		rescue SQLite3::SQLException
+		end
+	end
 end
 
 class Carbon < IRCBot
@@ -67,7 +74,7 @@ class Carbon < IRCBot
 							
 							# Random
 							when /^(something random|random)$/
-								if @memory.items == 0
+								if @db.size == 0
 									irc.send_msg_delay "I have nothing random to say"
 								else
 #									a = @memory.to_a.sort_by{rand}.slice(0...1)[0][1].to_s
