@@ -17,15 +17,18 @@ class Facepalm < IRCBot
 					when /^facepalm[:,] (.+)/
 					# To facepalm...
 						case $1.strip.downcase
-							when /^ban word ([^\w]*?)$/
+							when /^ban word (.*?)$/
 								@banned_words.push $1.downcase
 								irc.send_msg "OK, #{username}. The next person to say #{$1} will be banned."
+								return
 							when /^ban phrase (.*)$/
 								@banned_words.push $1.downcase
 								irc.send_msg "OK, #{username}. The next person to say #{$1} will be banned."
+								return
 							# If it's irrelevant, ban them for five minutes
 							else
 								ban irc, username, 600
+								return
 						end
 					when /^(.*)$/
 						ban irc, username, 3600 if @banned_words.include? $1.downcase
