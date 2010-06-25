@@ -2,7 +2,7 @@
 
 require 'irc.rb'
 
-class Facepalm < IRCBot
+class Radon < IRCBot
 	def initialize
 		@banned_words = []
 	end
@@ -14,8 +14,8 @@ class Facepalm < IRCBot
 				username = $1
 				m = $5.strip
 				case m
-					when /^facepalm[:,] (.+)/
-					# To facepalm...
+					when /^#{self.name}[:,] (.+)/
+					# To radon...
 						case $1.strip.downcase
 							when /^ban word (.*?)$/
 								@banned_words.push $1.downcase
@@ -37,17 +37,17 @@ class Facepalm < IRCBot
 	end
 	
 	def ban irc, username, time
-		irc.send "KICK #{irc.channel} #{username} You made me facepalm" # if time == 0
+		irc.send "KICK #{irc.channel} #{username} :NOT FUNNY" # if time == 0
 #		irc.send "MODE #{irc.channel} +b #{username}"
 	end
 	
 	def name
-		'facepalm'
+		'radon'
 	end
 	
 	def fullname
-		"Facepalm"
+		"Radon"
 	end
 end
 
-IRC.run 'rcnet.ath.cx', 6667, 'facepalm', '#isp', Facepalm.new
+IRC.run 'rcnet.ath.cx', 6667, 'radon', '#isp', Radon.new
