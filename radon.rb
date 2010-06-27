@@ -38,7 +38,7 @@ class Radon < IRCBot
 	
 	def ban irc, username, time
 		irc.send "KICK #{irc.channel} #{username} :NOT FUNNY" # if time == 0
-#		irc.send "MODE #{irc.channel} +b #{username}"
+		irc.send "MODE #{irc.channel} +b #{username}"
 	end
 	
 	def name
