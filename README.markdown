@@ -5,6 +5,7 @@ Running the bots
 ----------------
 
 These bots require the following things:
+
 - Ruby
 - SQLite 3 (rubygems required to install the library)
 
@@ -24,7 +25,7 @@ These bots can be run by executing them. They should already have the execute fl
 
 However, windows users will need to explicitly invoke the ruby interpreter.
 
-	ruby carbon.rb
+    ruby carbon.rb
 
 Creating a new bot
 ------------------
