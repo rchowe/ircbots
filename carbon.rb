@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'irc.rb'
+require './irc.rb'
 require 'sqlite3'
 
 class CarbonDB
@@ -133,10 +133,14 @@ class Carbon < IRCBot
 						end
 					
 					when /^[\1]ACTION gives carbon (.+?)[\.]?[\1]$/
+						# Strip out articles for display
+						item = $1.strip
+						item_s = item.gsub( /^(the|a|)/, '' ).strip
+					
 						if @db.inventory_size.to_i < @max_inventory_size
-							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{$1.strip}.\1"
+							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{item_s}.\1"
 						else
-							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{$1.strip} and gives #{@last_user} #{@db.pop_random_item}.\1"
+							irc.send_msg_delay "\1ACTION takes #{@last_user}'s #{item_s} and gives #{@last_user} #{@db.pop_random_item}.\1"
 						end
 						@db.store_item $1.strip
 					
@@ -170,4 +174,4 @@ class Carbon < IRCBot
 	end
 end
 
-IRC.run 'rcnet.ath.cx', 6667, 'carbon', '#isp', Carbon.new
+IRC.run 'localhost', 6667, 'carbon', '#test', Carbon.new

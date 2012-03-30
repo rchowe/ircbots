@@ -30,4 +30,4 @@ However, windows users will need to explicitly invoke the ruby interpreter.
 Creating a new bot
 ------------------
 
-If you want to create a new bot, start by creating a new branch off of the IRC branch. This will give you a clean working environment with just the lastest IRC and IRCBot classes. Subcless the IRCBot class, and override the IRCBot#name and IRCBot#fullname methods. Then, override IRCBot#handle_server_msg method to respond to messages from the server.
+If you want to create a new bot, start by creating a new branch off of the IRC branch. This will give you a clean working environment with just the lastest `IRC` and `IRCBot` classes. Subcless the `IRCBot` class, and override the `IRCBot#name` and `IRCBot#fullname` methods. Then, override `IRCBot#handle_server_msg` method to respond to messages from the server.

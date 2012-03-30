@@ -2,7 +2,7 @@
 
 require 'socket'
 
-$SAFE = 1
+$SAFE = 0
 $DEBUG = true
 
 def debug_puts msg
@@ -78,7 +78,7 @@ class IRC
 	end
 	
 	def self.run server, port, nick, channel, bot
-		irc = IRC.new server, port, nick, channel, bot
+		irc = self.new server, port, nick, channel, bot
 		irc.connect
 		
 		begin
